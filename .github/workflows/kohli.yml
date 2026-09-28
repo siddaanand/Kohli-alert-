@@ -1,0 +1,36 @@
+name: Player Run Alert
+
+on:
+  schedule:
+    # Every 10 min, 09:00-19:59 UTC
+    # = 2:00 AM-12:59 PM Pacific (summer, PDT) / 1:00 AM-11:59 AM Pacific (winter, PST)
+    - cron: "*/10 9-19 * * *"
+  workflow_dispatch:
+    inputs:
+      players:
+        description: "Players (comma-separated). Blank = use saved setting"
+        required: false
+      teams:
+        description: "Teams (comma-separated). Blank = use saved setting"
+        required: false
+      threshold:
+        description: "Runs to alert at. Blank = use saved setting"
+        required: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - run: python kohli_alert.py
+        env:
+          CRICAPI_KEY: ${{ secrets.CRICAPI_KEY }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          PLAYERS: ${{ github.event.inputs.players || vars.PLAYERS }}
+          TEAMS: ${{ github.event.inputs.teams || vars.TEAMS }}
+          THRESHOLD: ${{ github.event.inputs.threshold || vars.THRESHOLD }}
